@@ -23,7 +23,7 @@
     :alias :h
     :default false}})
 
-(def example-input ["--mappings" "aiff" "example/maiff" "jpeg" "example/jpe"
+(def example-input ["--mappings" "aiff" "/home/sam/aiff" "jpeg" "/home/sam/jpg"
                     "--fromdirectory" "example"])
 
 (def input (cli/parse-opts (or *command-line-args* example-input)
@@ -35,17 +35,17 @@
   (System/exit 0))
 
 (def ext->folder "Map from file extension to location."
-  (apply hash-map (:args input)))
+  (apply hash-map (:mappings input)))
 
 (defn move [from-dir]
-  (for [file (fs/list-dir from-dir)
-        :let [folder (ext->folder (fs/extension file))]
-        :when (and folder
-                   (not (fs/exists?
-                         (fs/path folder (fs/file-name file)))))]
-    (do
-      (fs/create-dirs folder)
-      (prn (format "%s -> %s" file folder))
-      (fs/copy file folder))))
+  (doall (for [file (fs/list-dir from-dir)
+               :let [folder (ext->folder (fs/extension file))
+                     new-path (fs/path folder (fs/file-name file))]
+               :when (and folder
+                          (not (fs/exists? new-path)))]
+           (do
+             (println (str file) " -> " (str new-path))
+             (fs/create-dirs folder)
+             (fs/copy file folder)))))
 
-(move (:fromdirectory (:opts input)))
+(move (:fromdirectory input))
