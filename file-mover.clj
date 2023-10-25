@@ -3,7 +3,19 @@
          '[babashka.fs :as fs]
          '[clojure.string :as string])
 
-(prn (cli/parse-args *command-line-args*))
+(def spec {:coerce {:mappings []}
+           :validate {:mappings
+                      {:pred #(even? (count %))
+                       :ex-msg (fn [{:keys [value]}]
+                                 (str "Each file extension needs to have a folder to map to. You provided " value " which should be of even length, but is not."))}}
+           :exec-args {:fromdirectory (fs/cwd)}})
+
+(prn (cli/parse-args *command-line-args*
+                     spec))
+
+(cli/parse-args ["--mappings" "aiff" "example/maiff" "jpeg" "example/jpeg"
+                 "--fromdirectory" "example"]
+                spec)
 
 (def input {:args ["aiff" "example/maiff" "jpeg" "example/jpeg"]
             :opts {:fromdirectory "example"}})
