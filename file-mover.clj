@@ -3,24 +3,23 @@
          '[babashka.fs :as fs]
          '[clojure.string :as string])
 
-(def cli-options {:help {:coerce :boolean}})
+(prn (cli/parse-args *command-line-args*))
 
-;(def args (cli/parse-args *command-line-args*)) 
-(def args (cli/parse-args ["aiff" "example/maiff" "jpg" "example/jpeg"]))
+(def input {:args ["aiff" "example/maiff" "jpeg" "example/jpeg"]
+            :opts {:fromdirectory "example"}})
 
-(def file-extension->folder
-  (apply hash-map (:args args)))
+(def ext->folder "Map from file extension to location."
+  (apply hash-map (:args input)))
 
-(defn move [base-dir]
-  (for [f (fs/list-dir base-dir)
-        :let [extension (fs/extension f)
-              folder 
-              (file-extension->folder extension)]]
+(defn move [from-dir]
+  (for [file (fs/list-dir from-dir)
+        :let [folder (ext->folder (fs/extension file))]
+        :when (and folder
+                   (not (fs/exists?
+                         (fs/path folder (fs/file-name file)))))]
     (do
       (fs/create-dirs folder)
-      (prn extension)
-      (prn folder)
-      (prn (format "%s -> %s" f folder))
-      (fs/copy f folder))))
+      (prn (format "%s -> %s" file folder))
+      (fs/copy file folder))))
 
-(move "example")
+(move (:fromdirectory (:opts input)))
