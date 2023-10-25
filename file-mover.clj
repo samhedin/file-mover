@@ -40,12 +40,12 @@
   (println (cli/format-opts spec))
   (System/exit 0))
 
-(def ext->folder-map "Map from file extension to location."
+(def ext->folder-prefix "Map from file extension to location."
   (apply hash-map (:extension_to_folder input)))
 
 (defn file->folder "Returns the folder for a given file. If the file is smaller than sample-cutoff, the folder will be suffixed with -sample to show that it's not a full song." [file sample-cutoff]
   (let [sample? (> (* 1000000 sample-cutoff) (fs/size file))
-        base (ext->folder-map (fs/extension file))]
+        base (ext->folder-prefix (fs/extension file))]
     (if sample?
       (str base "-sample")
       base)))
